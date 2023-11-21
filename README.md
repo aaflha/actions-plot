@@ -4,7 +4,7 @@
 værsågod krifla
 ```
 
-
+The image to embed has the following url: https://raw.githubusercontent.com/aaflha/actions-plot/main/fig.png
 
 ### Get going
 You will need `python` 3.x, `venv` and `git` to get going
