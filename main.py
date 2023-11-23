@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime
 import pandas as pd
+import os
 
 def plot():
     NB = pd.read_csv(os.environ["SOME_SECRET_SAUCE"], sep=',')
