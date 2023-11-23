@@ -5,7 +5,8 @@ import pandas as pd
 import os
 
 def plot():
-    NB = pd.read_csv(str(os.environ["SOME_SECRET_SAUCE"]), sep=',')
+    NB = pd.read_csv(str(os.environ["HOURLY_SECRET"]), sep=',')
+    #NB = pd.read_csv(str(os.environ["DAILY_SECRET"]), sep=',')
     NB['date'] = pd.to_datetime(NB['time'])
     NB = (NB.loc[np.where(NB['date'] >= pd.Timestamp('2021-07-01 00:00:00'))[0][0]:]).reset_index()
 
