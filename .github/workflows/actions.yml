@@ -26,7 +26,6 @@ jobs:
       - name: execute py script # run main.py
         env:
           HOURLY_SECRET: ${{ secrets.HOURLY_SECRET }}
-          DAILY_SECRET: ${{ secrets.DAILY_SECRET }}
         run: python main.py
           
       - name: commit files
