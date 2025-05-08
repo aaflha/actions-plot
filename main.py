@@ -168,9 +168,7 @@ def plot():
              fontsize=10, transform=ax2.transAxes, ha='right', va='bottom')
     
     plt.tight_layout()
-    plt.savefig('temp-wind_last48h.png')
-    plt.show()
-
+    plt.savefig('fig.png')
 
 if __name__ == "__main__":
     plot()
