@@ -53,6 +53,26 @@ class TemperaturePlot():
         ipaths = [self.get_mercury(tempnorm(t)) for t in temp]
         self.inner.set_paths(ipaths)
 
+def get_wind_direction(degrees):
+    if degrees < 0 or degrees >= 360:
+        raise ValueError("Degrees must be between 0 and 359")
+    if (degrees >= 337.5) or (degrees < 22.5):
+        return 'north'
+    elif 22.5 <= degrees < 67.5:
+        return 'northeast'
+    elif 67.5 <= degrees < 112.5:
+        return 'east'
+    elif 112.5 <= degrees < 157.5:
+        return 'southeast'
+    elif 157.5 <= degrees < 202.5:
+        return 'south'
+    elif 202.5 <= degrees < 247.5:
+        return 'southwest'
+    elif 247.5 <= degrees < 292.5:
+        return 'west'
+    elif 292.5 <= degrees < 337.5:
+        return 'northwest'
+
 def plot():
     NB = pd.read_csv(str(os.environ["HOURLY_SECRET"]), sep=',')
     #NB = pd.read_csv(str(os.environ["DAILY_SECRET"]), sep=',')
