@@ -59,43 +59,98 @@ def plot():
     NB['date'] = pd.to_datetime(NB['time'])
     NB = (NB.loc[np.where(NB['date'] >= pd.Timestamp('2021-07-01 00:00:00'))[0][0]:]).reset_index()
 
-    # rotate old data by 180 degrees
-    if NB['wdir_u'][0] < 200:
-        NB.loc[:np.where(NB['date'] <= pd.Timestamp('2023-09-12 17:00:00'))[0][-1],'wdir_u'] += 180
-    NB.loc[NB['wdir_u']>360,'wdir_u'] -= 360
-
-    # field notes
-    rotation_dates = [pd.Timestamp('2021-09-02 12:00:00'), pd.Timestamp('2023-09-12 17:00:00')]
-    rotation_offset = [np.nan, 60]
-
-    # estimate MSLP
-    NB_gps_alt = NB[NB['gps_alt'].notnull()]
-    h = NB_gps_alt['gps_alt'].mean() # potential error of a few hPa based on changing altitude
-    NB['mslp'] = NB['p_u']*(1-0.0065*h/(NB['t_u']+273.15+0.0065*h))**(-5.257)
-
+    # last observations
+    
+    last_48 = NB.tail(48)
+    
+    wind_speeds = last_48['wspd_u'].values
+    wind_directions = last_48['wdir_u'].values
+    #temps = last_48['wdir_u'].values
+    
+    if pd.isna(wind_speeds[-1]) or pd.isna(wind_directions[-1]):
+        last_observation = last_48.iloc[-2]  # Use second last if last is NaN
+    else:
+        last_observation = last_48.iloc[-1]  # Last observation
+    
+    last_wind_speed = last_observation['wspd_u']
+    last_wind_direction = last_observation['wdir_u']
+    last_temperature = last_observation['t_u']
+    
     ### plot data
-
-    fig, ax = plt.subplots(figsize=(10,5))
+    
+    plt.rcParams.update({'font.size': 28})
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8), subplot_kw={'projection': None})
+    
+    fig.suptitle('Temperature and wind at Nigardsbreen last 48 hours', x=.48, y=0.95)
+    fig.text(0.48, 0.84, f'Weather now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}     ',
+             ha='center', va='bottom', fontsize=18)#, fontweight='bold')
+    
+    # temperature subplot
+    
     n = 42
     x = NB['date'].values[-49:-1]
     y = NB['t_u'].values[-49:-1]
-    ymin = round(np.min(y))-1
-    ymax = round(np.max(y))+3
+    ymin = round(np.min(y)) - 1
+    ymax = round(np.max(y)) + 3
     sind = 3
     ind = 6
     
-    ax.plot(x,y, color="darkgrey", lw=2.5)
+    ax1.plot(x, y, color="darkgrey", lw=2.5)
     
     p = TemperaturePlot()
-    p.scatter(x[sind::ind],y[sind::ind]+2, s=300, temp=y[sind::ind], c=y[sind::ind], edgecolor="k", cmap="RdYlBu_r")
+    p.scatter(x[sind::ind], y[sind::ind] + 2, s=300, temp=y[sind::ind], c=y[sind::ind], edgecolor="k", cmap="RdYlBu_r", ax=ax1)
     
-    ax.set_ylim(ymin,ymax)
-    ax.set_xticks([NB['date'].values[-49],NB['date'].values[-37],NB['date'].values[-25],NB['date'].values[-13],NB['date'].values[-1]])
-    ax.set_xticklabels(['48','36','24', '12', '0'])
-    ax.set_xlabel('Hours ago')
-    ax.set_ylabel('Temperature (\u00b0C)')
+    ax1.set_ylim(ymin, ymax)
+    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-37], NB['date'].values[-25], NB['date'].values[-13], NB['date'].values[-1]])
+    ax1.set_xticklabels(['48', '36', '24', '12', '0'])
+    ax1.set_xlabel('Hours ago')
+    ax1.set_ylabel('Temperature (\u00b0C)')
+    
+    # wind subplot
+    
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+    
+    for spine in ax2.spines.values():
+        spine.set_visible(False)
+    
+    ax2 = fig.add_subplot(122, polar=True)
+    
+    angles = np.radians(wind_directions)
+    last_angle = np.radians(last_wind_direction)
+    
+    ax2.set_theta_direction(-1)  # Reverse the direction of the angles (clockwise)
+    ax2.set_theta_offset(np.pi / 2.0)  # Set 0 degrees to North (top of the plot)
+    
+    ax2.scatter(angles, wind_speeds, edgecolors='black', facecolors='none', s=100, label='last 48 hours')  # Previous observations
+    ax2.scatter(last_angle, last_wind_speed, color='red', s=200, zorder=5, label='last hour')
+    
+    ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
+    ax2.set_yticks(np.arange(1, int(last_48['wspd_u'].max()) + 1, 1))
+    
+    y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, int(last_48['wspd_u'].max()) + 1)]
+    ax2.set_yticklabels([])
+    for i, label in enumerate(y_labels):
+        angle = i * (np.pi / len(y_labels))  # Calculate the angle for each label
+        ax2.text(0.8, (i+1), label, ha='center', va='center', rotation=-45, 
+                 fontsize=24, color='black')  # Adjust rotation as needed
+    
+    
+    ax2.set_xticks(np.radians([0, 90, 180, 270]))  # North, East, South, West
+    ax2.set_xticklabels(['North', '    East', 'South', 'West     '])
+    
+    legend = ax2.legend(loc='lower right', title='Wind', bbox_to_anchor=(.3, -.08), fontsize=18)
+    legend.get_frame().set_alpha(None)
+    
+    timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
+    ax2.text(1.15, -.06, f'Last measurement:\n{timestamp}  ', 
+             fontsize=10, transform=ax2.transAxes, ha='right', va='bottom')
+    
+    plt.tight_layout()
+    plt.savefig('temp-wind_last48h.png')
+    plt.show()
 
-    plt.savefig('fig.png')
 
 if __name__ == "__main__":
     plot()
