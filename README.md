@@ -25,5 +25,5 @@ You will need `python` 3.x, `venv` and `git` to get going
 |commit changes|`git commit -m "<your descriptive commit message>"`|
 |push to remote|`git push`|
 
-### Changing the schedue
+### Changing the schedule
 The action is scheduled using cron syntax in .github/workflows/actions.yml line 5. Consult https://crontab.guru/ for guidance.
