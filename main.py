@@ -154,7 +154,7 @@ def plot():
     for i, label in enumerate(y_labels):
         angle = i * (np.pi / len(y_labels))  # Calculate the angle for each label
         ax2.text(0.8, (i+1), label, ha='center', va='center', rotation=-45, 
-                 fontsize=20, color='black')  # Adjust rotation as needed
+                 fontsize=22, color='black')  # Adjust rotation as needed
     
     
     ax2.set_xticks(np.radians([0, 90, 180, 270]))  # North, East, South, West
