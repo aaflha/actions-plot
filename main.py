@@ -113,7 +113,7 @@ def plot():
     y = NB['t_u'].values[-49:-1]
     ymin = round(np.min(y)) - 1
     ymax = round(np.max(y)) + 4
-    sind = 3
+    sind = 0
     ind = 6
     
     ax1.plot(x, y, color="darkgrey", lw=2.5)
