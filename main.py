@@ -4,6 +4,8 @@ import datetime
 import pandas as pd
 import os
 import matplotlib.path as mpath
+import requests
+from datetime import datetime
 
 class TemperaturePlot():
 
@@ -73,19 +75,97 @@ def get_wind_direction(degrees):
     elif 292.5 <= degrees < 337.5:
         return 'northwest'
 
+def get_met_data():
+    client_id = '1ee52b9e-84f4-4b79-adf8-5c157e3e610f'
+    
+    now = datetime.now()+pd.Timedelta(days=1)
+    then = now-pd.Timedelta(hours=72)
+    now = now.strftime("%Y-%m-%d")
+    then = then.strftime("%Y-%m-%d")
+    
+    # Define endpoint and parameters
+    endpoint = 'https://frost.met.no/observations/v0.jsonld'
+    parameters = {
+        'sources': 'SN55430',
+        'elements': 'min(air_temperature PT1H), max(air_temperature PT1H), sum(precipitation_amount PT1H)', # mean PT1H doesn't work...
+        'referencetime': f'{then}/{now}', #'2010-04-01/2010-04-03',
+    }
+    # Issue an HTTP GET request
+    r = requests.get(endpoint, parameters, auth=(client_id,''))
+    # Extract JSON data
+    json = r.json()
+    
+    # Check if the request worked, print out any errors
+    if r.status_code == 200:
+        data = json['data']
+        print('Data retrieved from frost.met.no!')
+    else:
+        print('Error! Returned status code %s' % r.status_code)
+        print('Message: %s' % json['error']['message'])
+        print('Reason: %s' % json['error']['reason'])
+    
+    # based on https://frost.met.no/python_example.html
+
+    MG = pd.DataFrame()
+    for i in range(len(data)):
+        row = pd.DataFrame(data[i]['observations'])
+        row['referenceTime'] = data[i]['referenceTime']
+        row['sourceId'] = data[i]['sourceId']
+        MG = pd.concat([MG, row], ignore_index=True)
+    MG = MG.reset_index()
+    
+    MG['time'] = pd.to_datetime(MG['referenceTime']) # time is in UTC
+    MG = MG.pivot(index='time', columns='elementId', values='value')
+    MG.reset_index(inplace=True)
+    MG.columns.name = None
+    MG = MG.rename(columns={'max(air_temperature PT1H)': 'T_max', 'min(air_temperature PT1H)': 'T_min', 'sum(precipitation_amount PT1H)': 'precip'})
+
+    return MG
+    
 def plot():
+
+    # load observations
+    
     NB = pd.read_csv(str(os.environ["HOURLY_SECRET"]), sep=',')
     #NB = pd.read_csv(str(os.environ["DAILY_SECRET"]), sep=',')
     NB['date'] = pd.to_datetime(NB['time'])
     NB = (NB.loc[np.where(NB['date'] >= pd.Timestamp('2021-07-01 00:00:00'))[0][0]:]).reset_index()
 
-    # last observations
+    MG = get_met_data()
+
+    # load map
+
+    path = "https://raw.githubusercontent.com/krifla/nigardsbreen_data-campaign/main/data/map/"
+
+    file = "Basisdata_4644_Luster_25833_N50Hoyde_GML.gml"
+    url = path+file
+    terrain = gpd.read_file(url, layer='Høydekurve')
+    
+    file = "Basisdata_4644_Luster_25833_N50Arealdekke_GML.gml"
+    url = path+file
+    lakes = gpd.read_file(url, layer='Innsjø')
+    lakes = lakes.loc[(~np.isnan(lakes['vatnLøpenummer']))&(lakes['høyde']>200)&(lakes['høyde']<400)]
+    glaciers = gpd.read_file(url, layer='SnøIsbre')
+    rivers = gpd.read_file(url, layer='Elv')    
+    
+    terrain_100 = terrain[terrain['høyde'] % 100 == 0]
+    terrain_500 = terrain[terrain['høyde'] % 500 == 0]
+    glaciers_simp = glaciers.simplify(20, preserve_topology=True)
+    glaciers_buffered = glaciers_simp.buffer(.1, resolution=4)
+    terrain_glaciers_100 = terrain_100.intersection(glaciers_buffered.union_all())#unary_union)
+    terrain_glaciers_500 = terrain_500.intersection(glaciers_buffered.union_all())#unary_union)
+    
+    file = "ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp"
+    url = path+file
+    world = gpd.read_file(url)
+    norway = world[world['ADMIN'] == 'Norway']
+    
+    # define last observations
     
     last_48 = NB.tail(48)
-    
+
     wind_speeds = last_48['wspd_u'].values
     wind_directions = last_48['wdir_u'].values
-    #temps = last_48['wdir_u'].values
     
     if pd.isna(wind_speeds[-1]) or pd.isna(wind_directions[-1]):
         last_observation = last_48.iloc[-2]  # Use second last if last is NaN
@@ -95,37 +175,66 @@ def plot():
     last_wind_speed = last_observation['wspd_u']
     last_wind_direction = last_observation['wdir_u']
     last_temperature = last_observation['t_u']
+    last_temperature_MG = ((MG['T_max'].tail(1)+MG['T_min'].tail(1))/2).values[0]
     
-    ### plot data
+    # plot
     
     plt.rcParams.update({'font.size': 28})
     
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8), subplot_kw={'projection': None})
+    #fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 8), subplot_kw={'projection': None})
+    from matplotlib import gridspec
     
-    fig.suptitle('Temperature and wind at Nigardsbreen last 48 hours', x=.48, y=0.95)
-    fig.text(0.48, 0.84, f'Weather now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}     ',
-             ha='center', va='bottom', fontsize=18)#, fontweight='bold')
+    res=1.2
+    fig = plt.figure(figsize=(18*res, 8*res))
+    
+    # Create a GridSpec with different width ratios
+    gs = gridspec.GridSpec(1, 3, width_ratios=[2, 3, 1.2])  # The third subplot will be twice as wide
+    
+    # Create subplots using the GridSpec
+    ax1 = fig.add_subplot(gs[0])
+    ax3 = fig.add_subplot(gs[1])
+    ax2 = fig.add_subplot(gs[2])
+    
+    # text
+    
+    fig.suptitle('Local weather last 48 hours', x=.068, y=1.1, ha='left', fontsize=60) # x=.48
+    fig.text(0.068, 0.93, f'Weather at Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
+             ha='left', va='bottom', fontsize=28, color='C9')
+    fig.text(0.068, 0.87, f'Weather near Breheimsenteret$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
+             ha='left', va='bottom', fontsize=28, color='C1')
+    
+    fig.text(0.068, 0.01, f'1: Nigardsbreen weather station, operated by Western Norway University of Applied Sciences\n2: Mjølversgrendi weather station, operated by Norwegian Meteorological Institute',
+             ha='left', va='bottom', fontsize=14)
+    
+    timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
+    fig.text(.975, 1.05, f'Last measurement:\n{timestamp}', 
+             fontsize=14, ha='right', va='bottom')
     
     # temperature subplot
     
     n = 42
-    x = NB['date'].values[-49:-1]
-    y = NB['t_u'].values[-49:-1]
-    ymin = round(np.min(y)) - 1
-    ymax = round(np.max(y)) + 4
-    sind = 5
+    x_NB = NB['date'].values[-49:-1]
+    y_NB = NB['t_u'].values[-49:-1]
+    x_MG = MG['time'].tail(48)
+    y_MG = (MG['T_max'].tail(48)+MG['T_min'].tail(48))/2
+    ymin = round(np.min([np.min(y_NB), np.min(y_MG)])) - 1
+    ymax = round(np.max([np.max(y_NB), np.max(y_MG)])) + 2#3
+    sind = 3
     ind = 6
     
-    ax1.plot(x, y, color="darkgrey", lw=2.5)
-    
-    p = TemperaturePlot()
-    p.scatter(x[sind::ind], y[sind::ind] + 2, s=300, temp=y[sind::ind], c=y[sind::ind], edgecolor="k", cmap="RdYlBu_r", ax=ax1)
+    ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$')
+    ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Near Breheimsenteret$^2$')
+    ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9')
+    ax1.scatter(x_MG[-1:], y_MG[-1:], 100, marker='o', color='C1')
     
     ax1.set_ylim(ymin, ymax)
-    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-37], NB['date'].values[-25], NB['date'].values[-13], NB['date'].values[-1]])
-    ax1.set_xticklabels(['48', '36', '24', '12', '0'])
-    ax1.set_xlabel('Hours ago')
+    yticks = ax1.get_yticks()
+    ax1.set_yticks(yticks[1:-1])
+    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-2]])
+    ax1.set_xticklabels(['48 h ago', '24 h ago', 'Now'])
+    ax1.set_xlabel(' ')#Hours ago')
     ax1.set_ylabel('Temperature (\u00b0C)')
+    ax1.legend(fontsize=16)
     
     # wind subplot
     
@@ -135,7 +244,7 @@ def plot():
     for spine in ax2.spines.values():
         spine.set_visible(False)
     
-    ax2 = fig.add_subplot(122, polar=True)
+    ax2 = fig.add_subplot(133, polar=True)
     
     angles = np.radians(wind_directions)
     last_angle = np.radians(last_wind_direction)
@@ -144,7 +253,7 @@ def plot():
     ax2.set_theta_offset(np.pi / 2.0)  # Set 0 degrees to North (top of the plot)
     
     ax2.scatter(angles, wind_speeds, edgecolors='black', facecolors='none', s=100, label='last 48 hours')  # Previous observations
-    ax2.scatter(last_angle, last_wind_speed, color='red', s=200, zorder=5, label='last hour')
+    ax2.scatter(last_angle, last_wind_speed, color='C9', s=200, zorder=5, label='last hour')
     
     ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
     ax2.set_yticks(np.arange(1, int(last_48['wspd_u'].max()) + 1, 1))
@@ -154,20 +263,58 @@ def plot():
     for i, label in enumerate(y_labels):
         angle = i * (np.pi / len(y_labels))  # Calculate the angle for each label
         ax2.text(0.8, (i+1), label, ha='center', va='center', rotation=-45, 
-                 fontsize=22, color='black')  # Adjust rotation as needed
+                 fontsize=24, color='black')  # Adjust rotation as needed
     
     
-    ax2.set_xticks(np.radians([0, 90, 180, 270]))  # North, East, South, West
-    ax2.set_xticklabels(['North', '    East', 'South', 'West     '])
+    ax2.set_xticks(np.radians([0, 45, 90, 135, 180, 225, 270, 315]))  # North, East, South, West
+    ax2.set_xticklabels(['N', 'NE', 'E ', 'SE', 'S', 'SW', 'W', 'NW'])
     
-    legend = ax2.legend(loc='lower right', title='Wind', bbox_to_anchor=(.3, -.08), fontsize=18)
+    #ax2.text(500, .5, f'West', rotation=90, fontsize=14, ha='left', va='center')
+    
+    legend = ax2.legend(loc='lower right', title='Wind Nigardsbreen', bbox_to_anchor=(.92, -.55), fontsize=18, title_fontsize=22) # bbox_to_anchor=(.3, -.08)
     legend.get_frame().set_alpha(None)
     
-    timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
-    ax2.text(1.15, -.06, f'Last measurement:\n{timestamp}  ', 
-             fontsize=10, transform=ax2.transAxes, ha='right', va='bottom')
+    xticklabels = ax2.get_xticklabels()
+    xticklabels[0].set_verticalalignment('bottom')  # Align N label
+    xticklabels[1].set_horizontalalignment('left')  # Align NE label
+    xticklabels[2].set_horizontalalignment('left')  # Align E label
+    xticklabels[3].set_horizontalalignment('left')  # Align SE label
+    xticklabels[4].set_verticalalignment('top')     # Align S label
+    xticklabels[5].set_horizontalalignment('right') # Align SW label
+    xticklabels[6].set_horizontalalignment('right') # Align W label
+    xticklabels[7].set_horizontalalignment('right') # Align NW label
     
-    plt.tight_layout()
+    # plot map
+    
+    ax3.scatter(7.197794684331172, 61.686051540061946, ec='k', c='C9',       s=500)
+    ax3.scatter(7.275990675443110, 61.659358589432706, ec='k', c='C1',       s=500)
+    ax3.scatter(7.275437085733799, 61.65134930139541,  ec='k', c='darkgrey', s=500)
+    txt = ax3.text(7.197794684331172+.007, 61.686051540061946-.007, 'Nigardsbreen\nweather station', fontsize=22, ha='left', va='bottom')
+    txt.set_bbox(dict(facecolor='snow', alpha=.6, edgecolor='none'))
+    txt = ax3.text(7.3, 61.659358589432706+.003, 'Mjølversgrendi\nweather station', fontsize=22, ha='right', va='bottom')
+    txt.set_bbox(dict(facecolor='snow', alpha=.6, edgecolor='none'))
+    txt = ax3.text(7.3, 61.65134930139541-.003, 'Breheimsenteret', fontsize=22, ha='right', va='top')
+    txt.set_bbox(dict(facecolor='snow', alpha=.6, edgecolor='none'))
+    
+    terrain_100.to_crs(epsg=4326).plot(ax=ax3, lw=1, color='tan', zorder=-1000)
+    terrain_500.to_crs(epsg=4326).plot(ax=ax3, lw=2, color='tan', zorder=-1000)
+    
+    glaciers.to_crs(epsg=4326).plot(ax=ax3, color='white', edgecolor='k', zorder=-500)
+    terrain_glaciers_100.to_crs(epsg=4326).plot(ax=ax3, color='skyblue', lw=1, zorder=-100)
+    terrain_glaciers_500.to_crs(epsg=4326).plot(ax=ax3, color='skyblue', lw=2, zorder=-100)
+    rivers.to_crs(epsg=4326).plot(ax=ax3, color='skyblue', zorder=-100)
+    lakes.to_crs(epsg=4326).plot(ax=ax3, color='lightblue', edgecolor='skyblue', zorder=-100)
+    
+    ax3.set_facecolor('snow')
+    
+    xmin=7.15; xmax=7.303; ymin=61.64; ymax=61.71
+    
+    ax3.set_xlim(xmin,xmax)
+    ax3.set_ylim(ymin,ymax)
+    ax3.set_xticks([])
+    ax3.set_yticks([])
+    
+    plt.tight_layout(w_pad=-3)
     plt.savefig('fig.png')
 
 if __name__ == "__main__":
