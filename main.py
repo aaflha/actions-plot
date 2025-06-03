@@ -106,8 +106,8 @@ def plot():
     terrain_500 = terrain[terrain['høyde'] % 500 == 0]
     glaciers_simp = glaciers.simplify(20, preserve_topology=True)
     glaciers_buffered = glaciers_simp.buffer(.1, resolution=4)
-    terrain_glaciers_100 = terrain_100.intersection(glaciers_buffered.union_all())#unary_union)
-    terrain_glaciers_500 = terrain_500.intersection(glaciers_buffered.union_all())#unary_union)
+    terrain_glaciers_100 = terrain_100.intersection(glaciers_buffered.union_all())
+    terrain_glaciers_500 = terrain_500.intersection(glaciers_buffered.union_all())
     
     file = "ne_50m_admin_0_countries/ne_50m_admin_0_countries.shp"
     url = path+file
@@ -151,10 +151,10 @@ def plot():
     fig.suptitle('Local weather last 48 hours', x=.068, y=1.1, ha='left', fontsize=60) # x=.48
     fig.text(0.068, 0.93, f'Weather at Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
              ha='left', va='bottom', fontsize=28, color='C9')
-    fig.text(0.068, 0.87, f'Weather near Breheimsenteret$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
+    fig.text(0.068, 0.87, f'Weather at Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
              ha='left', va='bottom', fontsize=28, color='C1')
     
-    fig.text(0.068, 0.01, f'1: Nigardsbreen weather station, operated by Western Norway University of Applied Sciences\n2: Mjølversgrendi weather station, operated by Norwegian Meteorological Institute',
+    fig.text(0.068, 0.01, f'1: Nigardsbreen weather station, operated by Western Norway University of Applied Sciences\n2: Mjølversgrendi weather station, operated by Norwegian Meteorological Institute and located near Breheimsenteret',
              ha='left', va='bottom', fontsize=14)
     
     timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
@@ -174,16 +174,16 @@ def plot():
     ind = 6
     
     ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$')
-    ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Near Breheimsenteret$^2$')
+    ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Mjølversgrendi$^2$')
     ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9')
     ax1.scatter(x_MG[-1:], y_MG[-1:], 100, marker='o', color='C1')
     
     ax1.set_ylim(ymin, ymax)
     yticks = ax1.get_yticks()
     ax1.set_yticks(yticks[1:-1])
-    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-2]])
+    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-1]])
     ax1.set_xticklabels(['48 h ago', '24 h ago', 'Now'])
-    ax1.set_xlabel(' ')#Hours ago')
+    ax1.set_xlabel(' ')
     ax1.set_ylabel('Temperature (\u00b0C)')
     ax1.legend(fontsize=16)
     
@@ -216,11 +216,8 @@ def plot():
         ax2.text(0.8, (i+1), label, ha='center', va='center', rotation=-45, 
                  fontsize=24, color='black')  # Adjust rotation as needed
     
-    
     ax2.set_xticks(np.radians([0, 45, 90, 135, 180, 225, 270, 315]))  # North, East, South, West
     ax2.set_xticklabels(['N', 'NE', 'E ', 'SE', 'S', 'SW', 'W', 'NW'])
-    
-    #ax2.text(500, .5, f'West', rotation=90, fontsize=14, ha='left', va='center')
     
     legend = ax2.legend(loc='lower right', title='Wind Nigardsbreen', bbox_to_anchor=(.92, -.55), fontsize=18, title_fontsize=22) # bbox_to_anchor=(.3, -.08)
     legend.get_frame().set_alpha(None)
