@@ -149,8 +149,8 @@ def plot():
     # text
     
     fig.suptitle('Local weather last 48 hours', x=.068, y=1.1, ha='left', fontsize=60) # x=.48
-    fig.text(0.068, 0.93, f'Weather at Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
-             ha='left', va='bottom', fontsize=28, color='C9')
+    fig.text(0.068, 0.98, f'Weather at Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
+             ha='left', va='top', fontsize=28, color='C9')
     fig.text(0.068, 0.87, f'Weather at Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
              ha='left', va='bottom', fontsize=28, color='C1')
     
@@ -158,8 +158,8 @@ def plot():
              ha='left', va='bottom', fontsize=14)
     
     timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
-    fig.text(.975, 1.05, f'Last measurement:\n{timestamp}', 
-             fontsize=14, ha='right', va='bottom')
+    fig.text(.975, 0.98, f'Last measurement:\n{timestamp}', 
+             fontsize=14, ha='right', va='top')
     
     # temperature subplot
     
@@ -181,7 +181,8 @@ def plot():
     ax1.set_ylim(ymin, ymax)
     yticks = ax1.get_yticks()
     ax1.set_yticks(yticks[1:-1])
-    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-1]])
+    #ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-1]])
+    ax1.set_xticks([x_MG[0], x_MG[24], x_MG[-1])
     ax1.set_xticklabels(['48 h ago', '24 h ago', 'Now'])
     ax1.set_xlabel(' ')
     ax1.set_ylabel('Temperature (\u00b0C)')
