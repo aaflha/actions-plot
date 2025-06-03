@@ -148,18 +148,18 @@ def plot():
     
     # text
     
-    fig.suptitle('Local weather last 48 hours', x=.068, y=1.1, ha='left', fontsize=60) # x=.48
-    fig.text(0.068, 0.98, f'Weather at Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
-             ha='left', va='top', fontsize=28, color='C9')
-    fig.text(0.068, 0.87, f'Weather at Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
-             ha='left', va='bottom', fontsize=28, color='C1')
+    fig.suptitle('Weather last 48 hours |', x=.066, y=.97, ha='left', va='top', fontsize=60) # x=.48
+    fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
+             ha='left', va='top', fontsize=27, color='C9')
+    fig.text(0.53, 0.87, f'Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
+             ha='left', va='bottom', fontsize=27, color='C1')
     
-    fig.text(0.068, 0.01, f'1: Nigardsbreen weather station, operated by Western Norway University of Applied Sciences\n2: Mjølversgrendi weather station, operated by Norwegian Meteorological Institute and located near Breheimsenteret',
+    fig.text(0.066, 0.01, f'1: Nigardsbreen weather station, operated by Western Norway University of Applied Sciences\n2: Mjølversgrendi weather station, operated by Norwegian Meteorological Institute and located near Breheimsenteret',
              ha='left', va='bottom', fontsize=14)
     
     timestamp = pd.Timestamp(NB['date'].values[-1]+pd.Timedelta(hours=2)).strftime('%Y-%m-%d %H:%M')
-    fig.text(.975, 0.98, f'Last measurement:\n{timestamp}', 
-             fontsize=14, ha='right', va='top')
+    fig.text(.949, .01, f'Last measurement: {timestamp}', 
+             fontsize=14, ha='right', va='bottom')
     
     # temperature subplot
     
