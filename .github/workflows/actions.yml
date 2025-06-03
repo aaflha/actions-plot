@@ -26,6 +26,7 @@ jobs:
       - name: execute py script # run main.py
         env:
           HOURLY_SECRET: ${{ secrets.HOURLY_SECRET }}
+          MET_ID: ${{ secrets.MET_ID }}
         run: python main.py
           
       - name: commit files
