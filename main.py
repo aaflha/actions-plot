@@ -30,7 +30,7 @@ def get_wind_direction(degrees):
         return 'northwest'
 
 def get_met_data():
-    client_id = '1ee52b9e-84f4-4b79-adf8-5c157e3e610f'
+    client_id = str(os.environ["MET_ID"])
     
     now = datetime.now()+pd.Timedelta(days=1)
     then = now-pd.Timedelta(hours=72)
