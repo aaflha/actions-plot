@@ -168,8 +168,8 @@ def plot():
     y_NB = NB['t_u'].values[-49:-1]
     x_MG = MG['time'].tail(48)
     y_MG = (MG['T_max'].tail(48)+MG['T_min'].tail(48))/2
-    ymin = round(np.min([np.min(y_NB), np.min(y_MG)])) - 1
-    ymax = round(np.max([np.max(y_NB), np.max(y_MG)])) + 2#3
+    ymin = round(np.min([np.nanmin(y_NB), np.nanmin(y_MG)])) - 1
+    ymax = round(np.max([np.nanmax(y_NB), np.nanmax(y_MG)])) + 2#3
     sind = 3
     ind = 6
     
