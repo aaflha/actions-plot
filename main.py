@@ -150,7 +150,7 @@ def plot():
     
     fig.suptitle('Weather last 48 hours |', x=.066, y=.97, ha='left', va='top', fontsize=60) # x=.48
     fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: in winter sleep')#{last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
-             ha='left', va='top', fontsize=27, color='C9')
+             #ha='left', va='top', fontsize=27, color='C9')
     fig.text(0.53, 0.87, f'Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
              ha='left', va='bottom', fontsize=27, color='C1')
     
