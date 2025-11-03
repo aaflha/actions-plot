@@ -149,7 +149,7 @@ def plot():
     # text
     
     fig.suptitle('Weather last 48 hours |', x=.066, y=.97, ha='left', va='top', fontsize=60) # x=.48
-    fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: {last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
+    fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: in winter sleep')#{last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
              ha='left', va='top', fontsize=27, color='C9')
     fig.text(0.53, 0.87, f'Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
              ha='left', va='bottom', fontsize=27, color='C1')
@@ -173,7 +173,7 @@ def plot():
     sind = 3
     ind = 6
     
-    ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$')
+    #ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$')
     ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Mjølversgrendi$^2$')
     ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9')
     ax1.scatter(x_MG[-1:], y_MG[-1:], 100, marker='o', color='C1')
