@@ -211,8 +211,12 @@ def plot():
     ax2.scatter(angles, wind_speeds, edgecolors='black', facecolors='none', s=100, label='last 48 hours')  # Previous observations
     ax2.scatter(last_angle, last_wind_speed, color='C9', s=200, zorder=5, label='last hour')
     
-    ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
-    ax2.set_yticks(np.arange(1, int(last_48['wspd_u'].max()) + 1, 1))
+    if np.any(~np.isnan(y_NB)):
+        ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
+        ax2.set_yticks(np.arange(1, int(last_48['wspd_u'].max()) + 1, 1))
+    else:
+        ax2.set_ylim(0, 10)
+        ax2.set_yticks(np.arange(1, 11, 1))
     
     y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, int(last_48['wspd_u'].max()) + 1)]
     ax2.set_yticklabels([])
