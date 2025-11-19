@@ -221,7 +221,7 @@ def plot():
     if np.any(~np.isnan(y_NB)):
         y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, int(last_48['wspd_u'].max()) + 1)]
     else:
-        y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, 11) + 1)]
+        y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, 10 + 1)]
     ax2.set_yticklabels([])
     for i, label in enumerate(y_labels):
         angle = i * (np.pi / len(y_labels))  # Calculate the angle for each label
