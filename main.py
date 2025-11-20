@@ -149,8 +149,8 @@ def plot():
     # text
     
     fig.suptitle('Weather last 48 hours |', x=.066, y=.97, ha='left', va='top', fontsize=60) # x=.48
-    fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: in winter sleep')#{last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
-             #ha='left', va='top', fontsize=27, color='C9')
+    fig.text(0.53, 0.98, f'Nigardsbreen$^1$ now: in winter sleep',#{last_temperature:.0f}$\u00b0$C and {last_wind_speed:.0f} m/s from {get_wind_direction(last_wind_direction)}', #     \nWeather near Breheimsenteret* now: {last_temperature_MG:.0f}$\u00b0$C \n ',
+             ha='left', va='top', fontsize=27, color='C9')
     fig.text(0.53, 0.87, f'Mjølversgrendi$^2$ now: {last_temperature_MG:.0f}$\u00b0$C',
              ha='left', va='bottom', fontsize=27, color='C1')
     
@@ -215,13 +215,13 @@ def plot():
         ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
         ax2.set_yticks(np.arange(1, int(last_48['wspd_u'].max()) + 1, 1))
     else:
-        ax2.set_ylim(0, 10)
+        ax2.set_ylim(0, 8)
         ax2.set_yticks(np.arange(1, 11, 1))
     
     if np.any(~np.isnan(y_NB)):
         y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, int(last_48['wspd_u'].max()) + 1)]
     else:
-        y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, 10 + 1)]
+        y_labels = ['' if i % 2 != 0 else f'{i} m/s' for i in range(1, 8 + 1)]
     ax2.set_yticklabels([])
     for i, label in enumerate(y_labels):
         angle = i * (np.pi / len(y_labels))  # Calculate the angle for each label
