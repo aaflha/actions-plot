@@ -177,7 +177,7 @@ def plot():
     sind = 3
     ind = 6
     
-    #ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$')
+    ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$') # take this out in winter
     ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Mjølversgrendi$^2$')
     ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9')
     ax1.scatter(x_MG[-1:], y_MG[-1:], 100, marker='o', color='C1')
@@ -185,7 +185,9 @@ def plot():
     ax1.set_ylim(ymin, ymax)
     yticks = ax1.get_yticks()
     ax1.set_yticks(yticks[1:-1])
-    ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-1]])
+    now = max(MG['time'].values[-1], NB['date'].values[-1])
+    ax1.set_xticks([now-pd.Timedelta(hours=48), now-pd.Timedelta(hours=24), now])
+    #ax1.set_xticks([NB['date'].values[-49], NB['date'].values[-25], NB['date'].values[-1]])
     #ax1.set_xticks([x_MG[0], x_MG[24], x_MG[-1])
     ax1.set_xticklabels(['48 h ago', '24 h ago', 'Now'])
     ax1.set_xlabel(' ')
