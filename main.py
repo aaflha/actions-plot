@@ -179,7 +179,7 @@ def plot():
     
     #ax1.plot(x_NB, y_NB, color='C9', lw=2.5, label='Nigardsbreen$^1$') # take this out in winter
     ax1.plot(x_MG, y_MG, color='C1', lw=2.5, label='Mjølversgrendi$^2$')
-    ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9')
+    #ax1.scatter(x_NB[-1:], y_NB[-1:], 100, marker='o', color='C9') # take this out in winter
     ax1.scatter(x_MG[-1:], y_MG[-1:], 100, marker='o', color='C1')
     
     ax1.set_ylim(ymin, ymax)
