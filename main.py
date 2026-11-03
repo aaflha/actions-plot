@@ -210,8 +210,8 @@ def plot():
     ax2.set_theta_direction(-1)  # Reverse the direction of the angles (clockwise)
     ax2.set_theta_offset(np.pi / 2.0)  # Set 0 degrees to North (top of the plot)
     
-    ax2.scatter(angles, wind_speeds, edgecolors='black', facecolors='none', s=100, label='last 48 hours')  # Previous observations
-    ax2.scatter(last_angle, last_wind_speed, color='C9', s=200, zorder=5, label='last hour')
+    #ax2.scatter(angles, wind_speeds, edgecolors='black', facecolors='none', s=100, label='last 48 hours')  # Previous observations, take this out in winter
+    #ax2.scatter(last_angle, last_wind_speed, color='C9', s=200, zorder=5, label='last hour') # Last observation, take this out in winter
     
     if np.any(~np.isnan(y_NB)):
         ax2.set_ylim(0, np.ceil(last_48['wspd_u'].max()))  # Extend limit slightly above max wind speed
