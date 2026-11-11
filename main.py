@@ -233,7 +233,7 @@ def plot():
     ax2.set_xticks(np.radians([0, 45, 90, 135, 180, 225, 270, 315]))  # North, East, South, West
     ax2.set_xticklabels(['N', 'NE', 'E ', 'SE', 'S', 'SW', 'W', 'NW'])
 
-    title = 'Wind Nigardsbreen: in winter sleep' # include ": in winter" in winter
+    title = 'Wind Nigardsbreen:\nin winter sleep' # include ": in winter" in winter
     legend = ax2.legend(loc='lower right', title=title, bbox_to_anchor=(.92, -.55), fontsize=18, title_fontsize=22) # bbox_to_anchor=(.3, -.08)
     legend.get_frame().set_alpha(None)
     
